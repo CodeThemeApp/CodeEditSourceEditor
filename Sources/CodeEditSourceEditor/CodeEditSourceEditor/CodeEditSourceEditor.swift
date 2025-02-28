@@ -22,7 +22,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
     ///   - text: The text content
     ///   - language: The language for syntax highlighting
     ///   - theme: The theme for syntax highlighting
-    ///   - font: The default font
     ///   - tabWidth: The visual tab width in number of spaces
     ///   - indentOption: The behavior to use when the tab key is pressed. Defaults to 4 spaces.
     ///   - lineHeight: The line height multiplier (e.g. `1.2`)
@@ -49,7 +48,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
         _ text: Binding<String>,
         language: CodeLanguage,
         theme: EditorTheme,
-        font: NSFont,
         tabWidth: Int,
         indentOption: IndentOption = .spaces(count: 4),
         lineHeight: Double,
@@ -71,7 +69,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
         self.language = language
         self.theme = theme
         self.useThemeBackground = useThemeBackground
-        self.font = font
         self.tabWidth = tabWidth
         self.indentOption = indentOption
         self.lineHeight = lineHeight
@@ -98,7 +95,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
     ///   - text: The text content
     ///   - language: The language for syntax highlighting
     ///   - theme: The theme for syntax highlighting
-    ///   - font: The default font
     ///   - tabWidth: The visual tab width in number of spaces
     ///   - indentOption: The behavior to use when the tab key is pressed. Defaults to 4 spaces.
     ///   - lineHeight: The line height multiplier (e.g. `1.2`)
@@ -124,7 +120,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
         _ text: NSTextStorage,
         language: CodeLanguage,
         theme: EditorTheme,
-        font: NSFont,
         tabWidth: Int,
         indentOption: IndentOption = .spaces(count: 4),
         lineHeight: Double,
@@ -146,7 +141,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
         self.language = language
         self.theme = theme
         self.useThemeBackground = useThemeBackground
-        self.font = font
         self.tabWidth = tabWidth
         self.indentOption = indentOption
         self.lineHeight = lineHeight
@@ -171,7 +165,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
     package var text: TextAPI
     private var language: CodeLanguage
     private var theme: EditorTheme
-    private var font: NSFont
     private var tabWidth: Int
     private var indentOption: IndentOption
     private var lineHeight: Double
@@ -195,7 +188,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
         let controller = TextViewController(
             string: "",
             language: language,
-            font: font,
             theme: theme,
             tabWidth: tabWidth,
             indentOption: indentOption,
@@ -263,10 +255,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
     /// Update the parameters of the controller.
     /// - Parameter controller: The controller to update.
     func updateControllerParams(controller: TextViewController) {
-        if controller.font != font {
-            controller.font = font
-        }
-
         controller.wrapLines = wrapLines
         controller.useThemeBackground = useThemeBackground
         controller.lineHeightMultiple = lineHeight
@@ -316,7 +304,6 @@ public struct CodeEditSourceEditor: NSViewControllerRepresentable {
     /// - Parameter controller: The controller to check.
     /// - Returns: True, if the controller's parameters should be updated.
     func paramsAreEqual(controller: NSViewControllerType) -> Bool {
-        controller.font == font &&
         controller.isEditable == isEditable &&
         controller.isSelectable == isSelectable &&
         controller.wrapLines == wrapLines &&

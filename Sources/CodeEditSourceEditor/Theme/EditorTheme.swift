@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+extension NSFont: @retroactive @unchecked Sendable {}
+
 /// A collection of attributes used for syntax highlighting and other colors for the editor.
 ///
 /// Attributes of a theme that do not apply to text (background, line highlight) are a single `NSColor` for simplicity.
@@ -15,13 +17,11 @@ public struct EditorTheme: Equatable {
     /// Represents attributes that can be applied to style text.
     public struct Attribute: Equatable, Hashable, Sendable {
         public let color: NSColor
-        public let bold: Bool
-        public let italic: Bool
+        public let font: NSFont
 
-        public init(color: NSColor, bold: Bool = false, italic: Bool = false) {
+        public init(color: NSColor, font: NSFont) {
             self.color = color
-            self.bold = bold
-            self.italic = italic
+            self.font = font
         }
     }
 
@@ -84,7 +84,7 @@ public struct EditorTheme: Equatable {
     private func mapCapture(_ capture: CaptureName?) -> Attribute {
         switch capture {
         case .include, .constructor, .keyword, .boolean, .variableBuiltin,
-                .keywordReturn, .keywordFunction, .repeat, .conditional, .tag:
+             .keywordReturn, .keywordFunction, .repeat, .conditional, .tag:
             return keywords
         case .comment: return comments
         case .variable, .property: return variables
@@ -102,7 +102,7 @@ public struct EditorTheme: Equatable {
     /// - Parameter capture: The capture name
     /// - Returns: A `NSColor`
     func colorFor(_ capture: CaptureName?) -> NSColor {
-        return mapCapture(capture).color
+        mapCapture(capture).color
     }
 
     /// Returns the correct font with attributes (bold and italics) for a given capture name.
@@ -110,22 +110,7 @@ public struct EditorTheme: Equatable {
     ///   - capture: The capture name.
     ///   - font: The font to add attributes to.
     /// - Returns: A new font that has the correct attributes for the capture.
-    func fontFor(for capture: CaptureName?, from font: NSFont) -> NSFont {
-        let attributes = mapCapture(capture)
-        guard attributes.bold || attributes.italic else {
-            return font
-        }
-
-        var font = font
-
-        if attributes.bold {
-            font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
-        }
-
-        if attributes.italic {
-            font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
-        }
-
-        return font
+    func fontFor(for capture: CaptureName?) -> NSFont {
+        mapCapture(capture).font
     }
 }

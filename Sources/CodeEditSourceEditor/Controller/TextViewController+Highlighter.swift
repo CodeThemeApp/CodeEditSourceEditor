@@ -40,7 +40,7 @@ extension TextViewController {
 extension TextViewController: ThemeAttributesProviding {
     public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
         [
-            .font: theme.fontFor(for: capture, from: font),
+            .font: theme.fontFor(for: capture),
             .foregroundColor: theme.colorFor(capture),
             .kern: textView.kern
         ]

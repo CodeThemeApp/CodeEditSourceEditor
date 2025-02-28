@@ -6,10 +6,10 @@
 //
 
 import AppKit
-import CodeEditTextView
 import CodeEditLanguages
-import SwiftUI
+import CodeEditTextView
 import Combine
+import SwiftUI
 import TextFormation
 
 /// # TextViewController
@@ -21,12 +21,12 @@ public class TextViewController: NSViewController {
     public static let cursorPositionUpdatedNotification: Notification.Name = .init("TextViewController.cursorPositionNotification")
 
     var scrollView: NSScrollView!
-    private(set) public var textView: TextView!
+    public private(set) var textView: TextView!
     var gutterView: GutterView!
-    internal var _undoManager: CEUndoManager?
+    var _undoManager: CEUndoManager?
     /// Internal reference to any injected layers in the text view.
-    internal var highlightLayers: [CALayer] = []
-    internal var systemAppearance: NSAppearance.Name?
+    var highlightLayers: [CALayer] = []
+    var systemAppearance: NSAppearance.Name?
 
     package var localEvenMonitor: Any?
     package var isPostingCursorNotification: Bool = false
@@ -41,14 +41,6 @@ public class TextViewController: NSViewController {
         didSet {
             highlighter?.setLanguage(language: language)
             setUpTextFormation()
-        }
-    }
-
-    /// The font to use in the `textView`
-    public var font: NSFont {
-        didSet {
-            textView.font = font
-            highlighter?.invalidate()
         }
     }
 
@@ -98,7 +90,7 @@ public class TextViewController: NSViewController {
     }
 
     /// The current cursors' positions ordered by the location of the cursor.
-    internal(set) public var cursorPositions: [CursorPosition] = []
+    public internal(set) var cursorPositions: [CursorPosition] = []
 
     /// The editorOverscroll to use for the textView over scroll
     ///
@@ -151,7 +143,7 @@ public class TextViewController: NSViewController {
             textView.string
         }
         set {
-            self.setText(newValue)
+            setText(newValue)
         }
     }
 
@@ -174,14 +166,14 @@ public class TextViewController: NSViewController {
     /// The tree sitter client managed by the source editor.
     ///
     /// This will be `nil` if another highlighter provider is passed to the source editor.
-    internal(set) public var treeSitterClient: TreeSitterClient?
+    public internal(set) var treeSitterClient: TreeSitterClient?
 
     package var fontCharWidth: CGFloat { (" " as NSString).size(withAttributes: [.font: font]).width }
 
     /// Filters used when applying edits..
-    internal var textFilters: [TextFormation.Filter] = []
+    var textFilters: [TextFormation.Filter] = []
 
-    internal var cancellables = Set<AnyCancellable>()
+    var cancellables = Set<AnyCancellable>()
 
     /// ScrollView's bottom inset using as editor overscroll
     package var bottomContentInsets: CGFloat {
@@ -214,7 +206,6 @@ public class TextViewController: NSViewController {
     init(
         string: String,
         language: CodeLanguage,
-        font: NSFont,
         theme: EditorTheme,
         tabWidth: Int,
         indentOption: IndentOption,
@@ -234,7 +225,6 @@ public class TextViewController: NSViewController {
         coordinators: [TextViewCoordinator] = []
     ) {
         self.language = language
-        self.font = font
         self.theme = theme
         self.tabWidth = tabWidth
         self.indentOption = indentOption
@@ -267,7 +257,6 @@ public class TextViewController: NSViewController {
 
         self.textView = TextView(
             string: string,
-            font: font,
             textColor: theme.text.color,
             lineHeightMultiplier: lineHeightMultiple,
             wrapLines: wrapLines,
@@ -290,9 +279,9 @@ public class TextViewController: NSViewController {
     /// Set the contents of the editor.
     /// - Parameter text: The new contents of the editor.
     public func setText(_ text: String) {
-        self.textView.setText(text)
-        self.setUpHighlighter()
-        self.gutterView.setNeedsDisplay(self.gutterView.frame)
+        textView.setText(text)
+        setUpHighlighter()
+        gutterView.setNeedsDisplay(gutterView.frame)
     }
 
     // MARK: Paragraph Style

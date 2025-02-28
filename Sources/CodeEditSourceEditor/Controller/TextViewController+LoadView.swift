@@ -23,7 +23,6 @@ extension TextViewController {
         scrollView.contentView.postsBoundsChangedNotifications = true
 
         gutterView = GutterView(
-            font: font.rulerFont,
             textColor: .secondaryLabelColor,
             textView: textView,
             delegate: self

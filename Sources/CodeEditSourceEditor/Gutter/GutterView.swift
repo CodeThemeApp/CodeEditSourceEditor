@@ -79,12 +79,10 @@ public class GutterView: NSView {
     }
 
     public init(
-        font: NSFont,
         textColor: NSColor,
         textView: TextView,
         delegate: GutterViewDelegate? = nil
     ) {
-        self.font = font
         self.textColor = textColor
         self.textView = textView
         self.delegate = delegate
