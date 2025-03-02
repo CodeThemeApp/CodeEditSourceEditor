@@ -143,6 +143,7 @@ public class TextViewController: NSViewController {
             textView.string
         }
         set {
+            highlighter?.invalidate()
             setText(newValue)
         }
     }
@@ -168,8 +169,6 @@ public class TextViewController: NSViewController {
     /// This will be `nil` if another highlighter provider is passed to the source editor.
     public internal(set) var treeSitterClient: TreeSitterClient?
 
-    package var fontCharWidth: CGFloat { (" " as NSString).size(withAttributes: [.font: font]).width }
-
     /// Filters used when applying edits..
     var textFilters: [TextFormation.Filter] = []
 
@@ -180,9 +179,11 @@ public class TextViewController: NSViewController {
         let height = view.frame.height
         var inset = editorOverscroll * height
 
-        if height - inset < font.lineHeight * lineHeightMultiple {
-            inset = height - font.lineHeight * lineHeightMultiple
-        }
+        
+        #warning("add bottom inset")
+//        if height - inset < font.lineHeight * lineHeightMultiple {
+//            inset = height - font.lineHeight * lineHeightMultiple
+//        }
 
         return max(inset, .zero)
     }

@@ -13,7 +13,7 @@ extension TextViewController {
         // swiftlint:disable:next force_cast
         let paragraph = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
         paragraph.tabStops.removeAll()
-        paragraph.defaultTabInterval = CGFloat(tabWidth) * fontCharWidth
+        paragraph.defaultTabInterval = CGFloat(tabWidth) /** fontCharWidth*/
         return paragraph
     }
 
@@ -48,7 +48,7 @@ extension TextViewController {
         ? NSColor.quaternaryLabelColor
         : NSColor.selectedTextBackgroundColor.withSystemEffect(.disabled)
         gutterView.highlightSelectedLines = isEditable
-        gutterView.font = font.rulerFont
+        gutterView.font = theme.fontFor(for: .parameter)
         gutterView.backgroundColor = useThemeBackground ? theme.background : .textBackgroundColor
         if self.isEditable == false {
             gutterView.selectedLineTextColor = nil
