@@ -44,10 +44,9 @@ extension TextViewController {
     /// Style the gutter view.
     package func styleGutterView() {
         gutterView.frame.origin.y = -scrollView.contentInsets.top
-        gutterView.selectedLineColor = useThemeBackground ? theme.lineHighlight : systemAppearance == .darkAqua
-        ? NSColor.quaternaryLabelColor
-        : NSColor.selectedTextBackgroundColor.withSystemEffect(.disabled)
+        gutterView.selectedLineColor = theme.lineHighlight
         gutterView.highlightSelectedLines = isEditable
+        gutterView.textColor = theme.colorFor(.parameter)
         gutterView.font = theme.fontFor(for: .parameter)
         gutterView.backgroundColor = useThemeBackground ? theme.background : .textBackgroundColor
         if self.isEditable == false {

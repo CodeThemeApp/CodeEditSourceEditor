@@ -144,6 +144,38 @@ public enum CaptureName: Int8, CaseIterable, Sendable {
             return "keywordFunction"
         }
     }
+
+    var mappedName: String {
+        switch self {
+        case .include,
+             .constructor,
+             .keyword,
+             .boolean,
+             .variableBuiltin,
+             .keywordReturn,
+             .keywordFunction,
+             .repeat,
+             .conditional,
+             .tag:
+            return Self.keyword.stringValue
+        case .comment:
+            return Self.comment.stringValue
+        case .variable, .property:
+            return Self.variable.stringValue
+        case .function, .method:
+            return Self.function.stringValue
+        case .number, .float:
+            return Self.number.stringValue
+        case .string:
+            return Self.string.stringValue
+        case .type:
+            return Self.type.stringValue
+        case .parameter:
+            return Self.parameter.stringValue
+        case .typeAlternate:
+            return Self.typeAlternate.stringValue
+        }
+    }
 }
 
 extension CaptureName: CustomDebugStringConvertible {

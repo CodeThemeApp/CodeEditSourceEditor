@@ -42,7 +42,12 @@ extension TextViewController: ThemeAttributesProviding {
         [
             .font: theme.fontFor(for: capture),
             .foregroundColor: theme.colorFor(capture),
-            .kern: textView.kern
+            .kern: textView.kern,
+            .captureName: capture?.mappedName as Any,
         ]
     }
+}
+
+extension NSAttributedString.Key {
+    static let captureName = NSAttributedString.Key("captureName")
 }
