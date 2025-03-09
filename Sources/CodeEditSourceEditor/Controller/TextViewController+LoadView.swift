@@ -92,7 +92,7 @@ extension TextViewController {
             object: textView.selectionManager,
             queue: .main
         ) { [weak self] _ in
-            self?.updateCursorPosition()
+//            self?.updateCursorPosition()
             self?.highlightSelectionPairs()
         }
 
