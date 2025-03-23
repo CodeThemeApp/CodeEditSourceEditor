@@ -16,7 +16,7 @@ import TextFormation
 ///
 /// A view controller class for managing a source editor. Uses ``CodeEditTextView/TextView`` for input and rendering,
 /// tree-sitter for syntax highlighting, and TextFormation for live editing completions.
-public class TextViewController: NSViewController {
+public class TextViewController: NSViewController, ThemeAttributesProviding {
     // swiftlint:disable:next line_length
     public static let cursorPositionUpdatedNotification: Notification.Name = .init("TextViewController.cursorPositionNotification")
 
@@ -212,6 +212,7 @@ public class TextViewController: NSViewController {
     // MARK: Init
 
     init(
+        view: TextView? = nil,
         string: String,
         language: CodeLanguage,
         font: NSFont,
@@ -265,7 +266,7 @@ public class TextViewController: NSViewController {
             self.treeSitterClient = client
         }
 
-        self.textView = TextView(
+        self.textView = view ?? TextView(
             string: string,
             font: font,
             textColor: theme.text.color,
@@ -329,6 +330,14 @@ public class TextViewController: NSViewController {
             NSEvent.removeMonitor(localEvenMonitor)
         }
         localEvenMonitor = nil
+    }
+    
+    public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
+        [
+            .font: theme.fontFor(for: capture),
+            .foregroundColor: theme.colorFor(capture),
+            .kern: textView.kern
+        ]
     }
 }
 

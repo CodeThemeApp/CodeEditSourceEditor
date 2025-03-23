@@ -37,14 +37,3 @@ extension TextViewController {
         highlightProviders = newProviders
     }
 }
-
-extension TextViewController: ThemeAttributesProviding {
-    public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
-        [
-            .font: theme.fontFor(for: capture),
-            .foregroundColor: theme.colorFor(capture),
-            .kern: textView.kern,
-            .captureName: capture?.mappedName as Any,
-        ]
-    }
-}
