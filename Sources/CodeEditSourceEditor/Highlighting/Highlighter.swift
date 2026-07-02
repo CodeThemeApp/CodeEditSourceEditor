@@ -17,7 +17,7 @@ import OSLog
 ///
 /// This class manages multiple objects that help perform this task:
 /// - ``StyledRangeContainer``
-/// - ``StyledRangeStore``
+/// - ``RangeStore``
 /// - ``VisibleRangeProvider``
 /// - ``HighlightProviderState``
 ///
@@ -34,12 +34,12 @@ import OSLog
 /// |
 /// | Queries coalesced styles
 /// v
-/// +-------------------------------+             +-----------------------------+
-/// |    StyledRangeContainer       |   ------>   |      StyledRangeStore[]     |
-/// |                               |             |                             | Stores styles for one provider
-/// |  - manages combined ranges    |             |  - stores raw ranges &      |
-/// |  - layers highlight styles    |             |    captures                 |
-/// |  + getAttributesForRange()    |             +-----------------------------+
+/// +-------------------------------+             +-------------------------+
+/// |    StyledRangeContainer       |   ------>   |      RangeStore[]       |
+/// |                               |             |                         | Stores styles for one provider
+/// |  - manages combined ranges    |             |  - stores raw ranges &  |
+/// |  - layers highlight styles    |             |    captures             |
+/// |  + getAttributesForRange()    |             +-------------------------+
 /// +-------------------------------+
 /// ^
 /// | Sends highlighted runs
@@ -85,6 +85,7 @@ class Highlighter: NSObject {
 
     init(
         textView: TextView,
+        minimapView: MinimapView?,
         providers: [HighlightProviding],
         attributeProvider: ThemeAttributesProviding,
         language: CodeLanguage
@@ -93,7 +94,7 @@ class Highlighter: NSObject {
         self.textView = textView
         self.attributeProvider = attributeProvider
 
-        self.visibleRangeProvider = VisibleRangeProvider(textView: textView)
+        self.visibleRangeProvider = VisibleRangeProvider(textView: textView, minimapView: minimapView)
 
         let providerIds = providers.indices.map({ $0 })
         self.styleContainer = StyledRangeContainer(documentLength: textView.length, providers: providerIds)
@@ -153,6 +154,7 @@ class Highlighter: NSObject {
     /// - Parameter providers: All providers to use.
     public func setProviders(_ providers: [HighlightProviding]) {
         guard let textView else { return }
+        self.styleContainer.updateStorageLength(newLength: textView.textStorage.length)
 
         let existingIds: [ObjectIdentifier] = self.highlightProviders
             .compactMap { $0.highlightProvider }
@@ -162,7 +164,7 @@ class Highlighter: NSObject {
         let difference = newIds.difference(from: existingIds).inferringMoves()
 
         var highlightProviders = self.highlightProviders // Make a mutable copy
-        var moveMap: [Int: HighlightProviderState] = [:]
+        var moveMap: [Int: (Int, HighlightProviderState)] = [:]
 
         for change in difference {
             switch change {
@@ -173,7 +175,8 @@ class Highlighter: NSObject {
                     guard let movedProvider = moveMap[offset] else {
                         continue
                     }
-                    highlightProviders.insert(movedProvider, at: offset)
+                    highlightProviders.insert(movedProvider.1, at: offset)
+                    styleContainer.setPriority(providerId: movedProvider.0, priority: offset)
                     continue
                 }
                 // Set up a new provider and insert it with a unique ID
@@ -187,12 +190,12 @@ class Highlighter: NSObject {
                     language: language
                 )
                 highlightProviders.insert(state, at: offset)
-                styleContainer.addProvider(providerIdCounter, documentLength: textView.length)
+                styleContainer.addProvider(providerIdCounter, priority: offset, documentLength: textView.length)
                 state.invalidate() // Invalidate this new one
             case let .remove(offset, _, associatedOffset):
-                guard associatedOffset == nil else {
+                if let associatedOffset {
                     // Moved, add it to the move map
-                    moveMap[associatedOffset!] = highlightProviders.remove(at: offset)
+                    moveMap[associatedOffset] = (offset, highlightProviders.remove(at: offset))
                     continue
                 }
                 // Removed entirely
@@ -212,7 +215,7 @@ class Highlighter: NSObject {
 
 // MARK: NSTextStorageDelegate
 
-extension Highlighter: NSTextStorageDelegate {
+extension Highlighter: @preconcurrency NSTextStorageDelegate {
     /// Processes an edited range in the text.
     func textStorage(
         _ textStorage: NSTextStorage,
@@ -222,29 +225,15 @@ extension Highlighter: NSTextStorageDelegate {
     ) {
         // This method is called whenever attributes are updated, so to avoid re-highlighting the entire document
         // each time an attribute is applied, we check to make sure this is in response to an edit.
-        guard editedMask.contains(.editedCharacters), let textView else { return }
+        guard editedMask.contains(.editedCharacters) else { return }
 
-        let styleContainerRange: Range<Int>
-        let newLength: Int
-
-        if editedRange.length == 0 { // Deleting, editedRange is at beginning of the range that was deleted
-            styleContainerRange = editedRange.location..<(editedRange.location - delta)
-            newLength = 0
-        } else { // Replacing or inserting
-            styleContainerRange = editedRange.location..<(editedRange.location + editedRange.length - delta)
-            newLength = editedRange.length
-        }
-
-        styleContainer.storageUpdated(
-            replacedContentIn: styleContainerRange,
-            withCount: newLength
-        )
+        styleContainer.storageUpdated(editedRange: editedRange, changeInLength: delta)
 
         if delta > 0 {
             visibleRangeProvider.visibleSet.insert(range: editedRange)
         }
 
-        visibleRangeProvider.updateVisibleSet(textView: textView)
+        visibleRangeProvider.visibleTextChanged()
 
         let providerRange = NSRange(location: editedRange.location, length: editedRange.length - delta)
         highlightProviders.forEach { $0.storageDidUpdate(range: providerRange, delta: delta) }
@@ -266,7 +255,6 @@ extension Highlighter: NSTextStorageDelegate {
 extension Highlighter: StyledRangeContainerDelegate {
     func styleContainerDidUpdate(in range: NSRange) {
         guard let textView, let attributeProvider else { return }
-        textView.layoutManager.beginTransaction()
         textView.textStorage.beginEditing()
 
         let storage = textView.textStorage
@@ -276,13 +264,11 @@ extension Highlighter: StyledRangeContainerDelegate {
             guard let range = NSRange(location: offset, length: run.length).intersection(range) else {
                 continue
             }
-            storage?.setAttributes(attributeProvider.attributesFor(run.capture), range: range)
+            storage?.setAttributes(attributeProvider.attributesFor(run.value?.capture), range: range)
             offset += range.length
         }
 
         textView.textStorage.endEditing()
-        textView.layoutManager.endTransaction()
-        textView.layoutManager.invalidateLayoutForRange(range)
     }
 }
 

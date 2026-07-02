@@ -44,7 +44,7 @@ final class TagEditingTests: XCTestCase {
     }
 
     func test_tagCloseWithNewline() {
-        controller.indentOption = .spaces(count: 4)
+        controller.configuration.behavior.indentOption = .spaces(count: 4)
 
         controller.setText("<!doctype html>\n<div>")
         controller.textView.selectionManager.setSelectedRange(NSRange(location: 21, length: 0))
@@ -58,7 +58,7 @@ final class TagEditingTests: XCTestCase {
     }
 
     func test_nestedClose() {
-        controller.indentOption = .spaces(count: 4)
+        controller.configuration.behavior.indentOption = .spaces(count: 4)
 
         controller.setText("<html>\n    <div>\n        <div>\n    </div>\n</html>")
         controller.textView.selectionManager.setSelectedRange(NSRange(location: 30, length: 0))
@@ -69,12 +69,12 @@ final class TagEditingTests: XCTestCase {
         )
         XCTAssertEqual(
             controller.cursorPositions[0],
-            CursorPosition(range: NSRange(location: 43, length: 0), line: 4, column: 13)
+            CursorPosition(range: NSRange(location: 43, length: 0), start: .init(line: 4, column: 13), end: nil)
         )
     }
 
     func test_tagNotClose() {
-        controller.indentOption = .spaces(count: 1)
+        controller.configuration.behavior.indentOption = .spaces(count: 1)
 
         controller.setText("<html>\n <div>\n  <div>\n </div>\n</html>")
         controller.textView.selectionManager.setSelectedRange(NSRange(location: 6, length: 0))
@@ -85,7 +85,7 @@ final class TagEditingTests: XCTestCase {
         )
         XCTAssertEqual(
             controller.cursorPositions[0],
-            CursorPosition(range: NSRange(location: 7, length: 0), line: 2, column: 1)
+            CursorPosition(range: NSRange(location: 7, length: 0), start: .init(line: 2, column: 1), end: nil)
         )
     }
 
@@ -127,7 +127,7 @@ final class TagEditingTests: XCTestCase {
 
     func test_TSXTagClose() {
         controller.language = .tsx
-        controller.indentOption = .spaces(count: 4)
+        controller.configuration.behavior.indentOption = .spaces(count: 4)
         controller.setText("""
         const name = "CodeEdit"
         const element = (

@@ -12,6 +12,8 @@ public extension SyntacticTextViewController {
     override func loadView() {
         super.loadView()
 
+        syntacticTextView.window?.acceptsMouseMovedEvents = true
+
         NotificationCenter.default.addObserver(
             forName: SyntacticTextSelectionManager.syntacticCategorySelectionChangedNotification,
             object: syntacticTextView.syntacticSelectionManager,

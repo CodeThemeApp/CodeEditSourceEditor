@@ -22,67 +22,44 @@ public class SyntacticTextViewController: TextViewController {
     public static let syntacticCategoryPositionNotification: Notification.Name = .init("SyntacticTextViewController.syntacticCategoryPositionNotification")
 
     var syntacticCategoryPosition: SyntacticCategoryPosition?
-    public var syntacticTextView: SyntacticTextView!
+    public private(set) var syntacticTextView: SyntacticTextView!
 
     init(
         string: String,
         language: CodeLanguage,
-        font: NSFont,
-        theme: EditorTheme,
-        tabWidth: Int,
-        indentOption: IndentOption,
-        lineHeight: CGFloat,
-        wrapLines: Bool,
+        configuration: SourceEditorConfiguration,
         cursorPositions: [CursorPosition],
         syntacticCategoryPosition: SyntacticCategoryPosition?,
-        editorOverscroll: CGFloat,
-        useThemeBackground: Bool,
         highlightProviders: [HighlightProviding] = [TreeSitterClient()],
-        contentInsets: NSEdgeInsets?,
-        isEditable: Bool,
-        isSelectable: Bool,
-        letterSpacing: Double,
-        useSystemCursor: Bool,
-        bracketPairHighlight: BracketPairHighlight?,
         undoManager: CEUndoManager? = nil,
         coordinators: [TextViewCoordinator] = []
     ) {
+        let syntacticTextView = SyntacticTextView(string: string)
+        self.syntacticTextView = syntacticTextView
         self.syntacticCategoryPosition = syntacticCategoryPosition
-        self.syntacticTextView = SyntacticTextView(string: string)
 
         super.init(
-            view: syntacticTextView,
             string: string,
             language: language,
-            font: font,
-            theme: theme,
-            tabWidth: tabWidth,
-            indentOption: indentOption,
-            lineHeight: lineHeight,
-            wrapLines: wrapLines,
+            configuration: configuration,
             cursorPositions: cursorPositions,
-            editorOverscroll: editorOverscroll,
-            useThemeBackground: useThemeBackground,
             highlightProviders: highlightProviders,
-            contentInsets: contentInsets,
-            isEditable: isEditable,
-            isSelectable: isSelectable,
-            letterSpacing: letterSpacing,
-            useSystemCursor: useSystemCursor,
-            bracketPairHighlight: bracketPairHighlight,
             undoManager: undoManager,
-            coordinators: coordinators
+            coordinators: coordinators,
+            textView: syntacticTextView
         )
     }
 
     @MainActor required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
 
-    override public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
+extension SyntacticTextViewController {
+    public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
         [
-            .font: theme.fontFor(for: capture),
-            .foregroundColor: theme.colorFor(capture),
+            .font: configuration.appearance.theme.fontFor(for: capture, from: font),
+            .foregroundColor: configuration.appearance.theme.colorFor(capture),
             .kern: textView.kern,
             .captureName: capture?.mappedName as Any,
         ]

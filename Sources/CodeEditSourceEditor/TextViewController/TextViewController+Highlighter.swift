@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftTreeSitter
-import CodeEditTextView
 
 extension TextViewController {
     package func setUpHighlighter() {
@@ -18,6 +17,7 @@ extension TextViewController {
 
         let highlighter = Highlighter(
             textView: textView,
+            minimapView: minimapView,
             providers: highlightProviders,
             attributeProvider: self,
             language: language
@@ -35,5 +35,15 @@ extension TextViewController {
     package func setHighlightProviders(_ newProviders: [HighlightProviding]) {
         highlighter?.setProviders(newProviders)
         highlightProviders = newProviders
+    }
+}
+
+extension TextViewController: ThemeAttributesProviding {
+    public func attributesFor(_ capture: CaptureName?) -> [NSAttributedString.Key: Any] {
+        [
+            .font: configuration.appearance.theme.fontFor(for: capture, from: font),
+            .foregroundColor: configuration.appearance.theme.colorFor(capture),
+            .kern: textView.kern
+        ]
     }
 }

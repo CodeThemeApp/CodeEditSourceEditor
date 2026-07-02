@@ -7,21 +7,21 @@
 
 import SwiftUI
 
-extension NSFont: @retroactive @unchecked Sendable {}
-
 /// A collection of attributes used for syntax highlighting and other colors for the editor.
 ///
 /// Attributes of a theme that do not apply to text (background, line highlight) are a single `NSColor` for simplicity.
-/// All other attributes use the ``EditorTheme/Attribute`` type to store a color and a font.
+/// All other attributes use the ``EditorTheme/Attribute`` type to store
 public struct EditorTheme: Equatable {
     /// Represents attributes that can be applied to style text.
     public struct Attribute: Equatable, Hashable, Sendable {
         public let color: NSColor
-        public let font: NSFont
+        public let bold: Bool
+        public let italic: Bool
 
-        public init(color: NSColor, font: NSFont) {
+        public init(color: NSColor, bold: Bool = false, italic: Bool = false) {
             self.color = color
-            self.font = font
+            self.bold = bold
+            self.italic = italic
         }
     }
 
@@ -105,11 +105,27 @@ public struct EditorTheme: Equatable {
         return mapCapture(capture).color
     }
 
-    /// Returns the correct font for a given capture name.
+    /// Returns the correct font with attributes (bold and italics) for a given capture name.
     /// - Parameters:
     ///   - capture: The capture name.
+    ///   - font: The font to add attributes to.
     /// - Returns: A new font that has the correct attributes for the capture.
-    func fontFor(for capture: CaptureName?) -> NSFont {
-        return mapCapture(capture).font
+    func fontFor(for capture: CaptureName?, from font: NSFont) -> NSFont {
+        let attributes = mapCapture(capture)
+        guard attributes.bold || attributes.italic else {
+            return font
+        }
+
+        var font = font
+
+        if attributes.bold {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+        }
+
+        if attributes.italic {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+        }
+
+        return font
     }
 }
